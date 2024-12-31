@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-sw%@6k#3+85&-@49v4vw6d(*o7%*c$h3tzud(5(%i^5z-#pz)r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [ 'exceltosql-env-4.eba-nh3jpk3j.me-south-1.elasticbeanstalk.com',
+    'localhost',
+    '127.0.0.1',
+    ]
 
 
 # Application definition
@@ -116,7 +119,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+STATIC_ROOT = BASE_DIR / 'frontend'
 STATIC_URL = '/assets/'
 STATICFILES_DIRS = [
     BASE_DIR / 'frontend/dist/assets',  # Assuming your React app is inside the 'frontend' folder

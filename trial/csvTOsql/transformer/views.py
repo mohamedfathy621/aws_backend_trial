@@ -5,16 +5,18 @@ import sqlite3
 from django.http import JsonResponse
 from .models import User
 from django.http import HttpResponse
+import json
 import io
 loggedin_users= []
 @csrf_exempt
 def regist(request):
     if request.method =='POST':
-        password=request.POST.get('password')
-        username=request.POST.get('username')
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
         user=User.objects.filter(username=username).first()
         if user:
-            return JsonResponse({"error":"user already exists","username":username,"password":password},status=201)
+            return JsonResponse({"error":"user already exists"},status=201)
         user=User(username=username,password=password)
         user.save()
         return JsonResponse({"message":"user register successfull"},status=200)
@@ -22,8 +24,9 @@ def regist(request):
 @csrf_exempt
 def login(request):
     if request.method =="POST":
-        password=request.POST.get('password')
-        username=request.POST.get('username')
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
         user=User.objects.filter(username=username).first()
         if not user:
              return JsonResponse({"error":"user does not exist"},status=201)
