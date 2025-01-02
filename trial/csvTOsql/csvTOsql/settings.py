@@ -25,10 +25,8 @@ SECRET_KEY = 'django-insecure-sw%@6k#3+85&-@49v4vw6d(*o7%*c$h3tzud(5(%i^5z-#pz)r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ 'exceltosql-env-4.eba-nh3jpk3j.me-south-1.elasticbeanstalk.com',
-    'localhost',
-    '127.0.0.1',
-    ]
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
