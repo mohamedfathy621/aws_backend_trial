@@ -30,7 +30,7 @@ jobs:
 
     - name: Build Docker Image
       run: |
-       docker build -t sqltoexcel:EBdeploy -f trial/csvTOsql/dockerfile csvTOsql
+       docker build -t sqltoexcel:EBdeploy -f trial/csvTOsql/dockerfile trial/csvTOsql
 
 
     - name: Tag Docker Image
