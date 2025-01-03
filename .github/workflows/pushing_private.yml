@@ -40,3 +40,10 @@ jobs:
     - name: Push Docker Image to ECR
       run: |
         docker push 307946663588.dkr.ecr.me-south-1.amazonaws.com/sqltoexcel:EBdeploy
+    - name: Trigger EC2 Instance to Update
+      run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceIds,Values=i-0c427458ffb803fe1" \
+            --comment "Pull latest Docker image and restart container" \
+            --parameters '{"commands":["sudo docker pull 307946663588.dkr.ecr.me-south-1.amazonaws.com/sqltoexcel:Ebdeploy","sudo docker stop private_api || true","sudo docker rm private_api || true","sudo docker run -d --name private_api -p 8000:8000 --restart unless-stopped 307946663588.dkr.ecr.me-south-1.amazonaws.com/sqltoexcel:Ebdeploy"]}'
