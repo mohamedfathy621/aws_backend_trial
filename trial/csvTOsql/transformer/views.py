@@ -5,44 +5,9 @@ import sqlite3
 from django.http import JsonResponse
 from .models import User
 from django.http import HttpResponse
-import json
 import io
-loggedin_users= []
-@csrf_exempt
-def regist(request):
-    if request.method =='POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        user=User.objects.filter(username=username).first()
-        if user:
-            return JsonResponse({"error":"user already exists"},status=201)
-        user=User(username=username,password=password)
-        user.save()
-        return JsonResponse({"message":"user register successfull"},status=200)
+import os
 
-@csrf_exempt
-def login(request):
-    if request.method =="POST":
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        user=User.objects.filter(username=username).first()
-        if not user:
-             return JsonResponse({"error":"user does not exist"},status=201)
-        if not user.password == password:
-             return JsonResponse({"error":"wrong password"},status=201)
-        if username in loggedin_users:
-             return JsonResponse({"error":"user is already logged in"},status=201)
-        loggedin_users.append(username)
-        return JsonResponse({"message":"log in succuessfull","username":username}, status=200)
-    
-@csrf_exempt
-def logout(request):
-    if request.method =="POST":
-        username=request.POST.get('username')
-        loggedin_users.remove(username)
-        return JsonResponse({"message":"log out succuessfull","username":username}, status=200)
     
 def create_sqlite_connection(username):
     return sqlite3.connect(f'./transformer/databases/{username}', check_same_thread=False)
@@ -50,43 +15,44 @@ def create_sqlite_connection(username):
 # Create your views here.
 def sayHI(request):
     if request.method =='GET':
-        return JsonResponse({"message":"HI"} , status=200)
+        return JsonResponse({"message":"hello there"} , status=200)
 
 @csrf_exempt
 def csv_col(request):
     if request.method =='POST':
-        csv_file= request.FILES['file']
-        username= request.POST.get('username',"")
-        user=User.objects.filter(username=username).first()
-        if not user:
-            return JsonResponse({"error":"user does not exist"},status=200)
-        conn = create_sqlite_connection(username)
-        df=pd.read_excel(csv_file, sheet_name=None)
-        tables=[]
-        cursor = conn.cursor()
-        for sheet_name, data in df.items():
-            table_name = sheet_name.replace(" ", "_").lower()
-            data.to_sql(table_name, conn, index=False, if_exists='replace')
-            cursor.execute(f"SELECT * FROM {sheet_name}")
-            ret=cursor.fetchall()
-            result_df = pd.read_sql_query(f"SELECT * FROM {sheet_name}", conn)
-            tables=tables+[[sheet_name,ret,result_df.columns.tolist()]]
-            print(f"Sheet '{sheet_name}' has been written to SQLite table '{table_name}'.")
-        print(tables)
-        conn.close()
-        return JsonResponse({"message":tables} , status=200)
+        try:
+            csv_file= request.FILES['file']
+            username= request.POST.get('username',"")
+            if os.path.exists(f'./transformer/databases/{username}'):
+                os.remove(f'./transformer/databases/{username}')
+            conn = create_sqlite_connection(username)
+            df=pd.read_excel(csv_file, sheet_name=None)
+            tables=[]
+            cursor = conn.cursor()
+            print(username)
+            for sheet_name, data in df.items():
+                table_name = sheet_name.replace(" ", "_").lower()
+                data.to_sql(table_name, conn, index=False, if_exists='replace')
+                cursor.execute(f"SELECT * FROM {sheet_name}")
+                ret=cursor.fetchall()
+                result_df = pd.read_sql_query(f"SELECT * FROM {sheet_name}", conn)
+                tables=tables+[[sheet_name,ret,result_df.columns.tolist()]]
+                print(f"Sheet '{sheet_name}' has been written to SQLite table '{table_name}'.")
+            conn.close()
+            return JsonResponse({"message":tables} , status=200)
+        except:
+            return JsonResponse({"error":"the file maybe corrupted"} , status=400)
+    return JsonResponse({"error":'not allowed'} , status=400)
 
 @csrf_exempt
 def get_Data(request):
     if request.method =='POST':
         query=request.POST.get("query", "")
         username= request.POST.get('username',"")
-        user=User.objects.filter(username=username).first()
-        if not user:
-            return JsonResponse({"error":"user does not exist"},status=200)
         conn = create_sqlite_connection(username)
         cursor = conn.cursor()
         query_type = query.strip().split()[0].upper()
+        print(username)
         try:
             if query_type == 'SELECT':
                 cursor.execute(query)
@@ -141,6 +107,7 @@ def refresh_sheet(request):
     if request.method =='POST':
         username= request.POST.get('username',"")
         user=User.objects.filter(username=username).first()
+        print(username)
         if not user:
             return JsonResponse({"error":"user does not exist"},status=200)
         conn = create_sqlite_connection(username)
